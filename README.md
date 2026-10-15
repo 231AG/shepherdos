@@ -4,7 +4,7 @@ A clickable, front-end-only demo of **Church Connect**, a multi-church managemen
 
 Everything runs in the browser on fictional, generated data. There is no backend, no real sign-in and no real SMS. It is a static export hosted on Vercel.
 
-> Status: **Phase 4 of 6**. Done: foundation, demo sign-in, role and church switching, dashboard, members (directory, profile, add/edit, notebook import), attendance (services, offline Sunday check-in, trends), giving (ledger, reversals, drafts, daily close, CSV export), platform console with support sessions, departments, soul-winning pipeline and SMS messaging (simulated). Reports, Events, Bible and Settings follow in Phase 5.
+> Status: **Phase 5 of 6**. Every screen is built: dashboard, members (directory, profile, add/edit, notebook import), attendance (services, offline Sunday check-in, trends), giving (ledger, reversals, drafts, daily close, CSV export), platform console with support sessions, departments, soul-winning, SMS messaging (simulated), reports (CSV and print to PDF), events, the Bible reader and settings & roles. Phase 6 is polish: guide checklists, PWA install, accessibility and performance passes, link previews.
 
 ## Run it locally
 
@@ -27,8 +27,9 @@ src/data/types.ts    domain types shaped like the spec's data model
 src/data/store.ts    zustand store, persisted to localStorage (versioned)
 src/data/repo.ts     the repository: every read and write goes through here
 src/data/core.ts     seed + delta merge and write helpers (used only by repository modules)
-src/data/members.ts, attendance.ts, importer.ts, giving.ts,
-  departments.ts, soulwinning.ts, messaging.ts           repository modules, re-exported by repo.ts
+src/data/members.ts, attendance.ts, importer.ts, giving.ts, departments.ts,
+  soulwinning.ts, messaging.ts, events.ts, reports.ts, settings.ts
+                     repository modules, re-exported by repo.ts
 ```
 
 - **Generated relative to today.** The seed is rebuilt on every page load from the current date, so "last 12 Sundays" are always the most recent 12 Sundays and nothing looks stale.
@@ -61,6 +62,18 @@ A platform operator can only open a church's records under an approved, time-lim
 
 No SMS is ever sent. The composer counts characters and SMS segments (160 GSM-7 characters, or 70 when the text needs Unicode; split messages use 153 / 67), excludes opted-out members and members without a phone, and prices the send in credits. Sending captures credits from the church wallet, steps through queued, sending, sent and delivered, and returns credits for the few deliveries that fail. Sending is blocked when the wallet is short or the device is offline.
 
+### Reports
+
+Membership, attendance and giving for a date range (rolling ranges start on a Sunday so weekly charts have no half-empty first week). Giving is always shown per currency. Export CSV is a real download; "Print or save PDF" calls `window.print()`, and the print stylesheet (`@media print` in `globals.css` plus `print:hidden` on the app chrome) leaves only the report with a printed header. The secretary has no giving tab; pastors see totals only unless Settings allows the ledger; treasurer exports leave out phone numbers.
+
+### Settings and live status recalculation
+
+The New-days and Inactive-weeks thresholds live on the church row. Member status is derived on every read (`memberStatuses` in `repo.ts`, memoised per thresholds), so saving new thresholds recalculates statuses across the dashboard, members, departments, messaging audiences and reports at once. The Settings screen previews the new counts before saving. Pastor giving visibility (none / totals / ledger), staff invitations and support-access approvals (1, 2 or 4 hours) are also here.
+
+### Bible
+
+The KJV text (public domain) for Genesis, Psalms, Proverbs, Matthew, John and Romans is in `public/bible/<book>.json` as `{ book, chapters: string[][] }`. A book is fetched only when it is opened (about 50 to 230 KB each, much smaller compressed), so it never touches the app bundle. Verse counts were checked against the standard KJV when the files were generated from the public-domain `aruljohn/Bible-kjv` dataset.
+
 ### What the full version replaces
 
 Only the repository modules in `src/data/` (and `src/data/store.ts` for local UI state) change. Queries become Supabase reads under row-level security; commands (`logFollowUpNote`, `syncNow`, later `checkIn`, `postGiving`, `reverseGiving`) become server actions or Postgres RPCs; the offline queue moves to IndexedDB behind a service worker. Components keep calling the same functions. `src/mock/` is deleted.
@@ -92,6 +105,7 @@ node scripts/smoke.mjs           # clicks through the main demo flows
 node scripts/smoke-phase2.mjs    # members, import and check-in flows
 node scripts/smoke-phase3.mjs    # giving ledger rules and support sessions
 node scripts/smoke-phase4.mjs    # departments, soul-winning and messaging
+node scripts/smoke-phase5.mjs    # reports, events, Bible and settings
 node scripts/find-overflow.mjs http://localhost:4173/platform/ 390 operator
 ```
 

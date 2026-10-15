@@ -45,6 +45,8 @@ export function ColumnChart({
   const step = niceStep(max * 1.08);
   const top = Math.ceil((max * 1.08) / step) * step;
   const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step);
+  // Long series only label the peak and the latest column, so values never collide.
+  const dense = columns.length > 16;
   const peak = columns.reduce((m, c, i) => (c.value > columns[m].value ? i : m), 0);
 
   return (
@@ -63,7 +65,7 @@ export function ColumnChart({
             return (
               <div key={c.key} className="relative flex h-full min-w-0 flex-1 flex-col items-center justify-end">
                 <span
-                  className={cn("tabular mb-1 whitespace-nowrap text-[10px] font-semibold text-navy-700 sm:text-[11px]", !showLabel && "hidden lg:inline")}
+                  className={cn("tabular mb-1 whitespace-nowrap text-[10px] font-semibold text-navy-700 sm:text-[11px]", !showLabel && (dense ? "hidden" : "hidden lg:inline"), c.value === 0 && "invisible")}
                   aria-hidden
                 >
                   {formatValue(c.value)}
@@ -102,14 +104,20 @@ export function ColumnChart({
         </div>
       </div>
       <div className="ml-10 mt-2 flex gap-1 sm:gap-2" aria-hidden>
-        {columns.map((c, i) => (
-          <span
-            key={c.key}
-            className={cn("min-w-0 flex-1 whitespace-nowrap text-center text-[10px] text-muted", i % 2 === (columns.length - 1) % 2 ? "" : "max-sm:invisible")}
-          >
-            {c.label}
-          </span>
-        ))}
+        {columns.map((c, i) => {
+          // Thin the axis labels so they never collide: up to ~7 on phones, ~13 wider up.
+          const fromEnd = columns.length - 1 - i;
+          const phone = fromEnd % Math.max(1, Math.ceil(columns.length / 7)) === 0;
+          const wide = fromEnd % Math.max(1, Math.ceil(columns.length / 13)) === 0;
+          return (
+            <span
+              key={c.key}
+              className={cn("min-w-0 flex-1 whitespace-nowrap text-center text-[10px] text-muted", !phone && "max-sm:invisible", !wide && "sm:invisible")}
+            >
+              {c.label}
+            </span>
+          );
+        })}
       </div>
       <figcaption className="sr-only">
         <table>
