@@ -15,6 +15,7 @@ import type {
   AuditEvent,
   Church,
   ChurchEvent,
+  ImportJob,
   Currency,
   Department,
   FollowUpEvent,
@@ -56,6 +57,7 @@ export interface Tables {
   sms_wallet: SmsWalletEntry[];
   support_grants: SupportGrant[];
   audit_events: AuditEvent[];
+  import_jobs: ImportJob[];
 }
 
 export type TableName = keyof Tables;
@@ -342,6 +344,7 @@ function generateChurch(cfg: ChurchConfig, now: Date, epoch: Date, t: Tables) {
       sms_opt_out: false,
       household: null,
       converted_from_prospect_id: null,
+      imported_at: null,
       created_at: iso(joined < subDays(now, 210) ? subDays(now, 210) : joined),
     };
     members.push({ member, profile: f.profile, rate: PROFILE_RATE[f.profile], lastSeenDaysAgo: f.lastSeenDaysAgo ?? null, joinedAt: joined });
@@ -546,10 +549,11 @@ function generateChurch(cfg: ChurchConfig, now: Date, epoch: Date, t: Tables) {
     name: cfg.service.name,
     starts_at: iso(at(nextSun, cfg.service.hour)),
     location: cfg.service.location,
-    guest_count: 0,
+    guest_count: cfg.key === "grace" ? 9 : 4,
     closed: false,
     created_at: iso(subDays(now, 2)),
   });
+  seedOpenServiceCheckIns(cfg, churchId, nextSunId, at(nextSun, cfg.service.hour), members, t);
   const nextWed = getDay(now) === 3 ? now : nextWeekday(now, 3);
   t.services.push({
     id: uuidFrom(`svc:${cfg.key}:midweek:${toISODate(nextWed)}`),
@@ -594,6 +598,51 @@ function generateChurch(cfg: ChurchConfig, now: Date, epoch: Date, t: Tables) {
         created_at: iso(subDays(now, 40)),
       },
     );
+  }
+}
+
+
+/**
+ * The open Sunday service is shown "in progress" so visitors can try check-in
+ * on any day: most regulars are already in and synced, a couple were saved
+ * on an usher's tablet while offline, and exactly one (Grace Fellowship only)
+ * failed to sync so the Retry path can be shown.
+ */
+function seedOpenServiceCheckIns(
+  cfg: ChurchConfig,
+  churchId: string,
+  serviceId: string,
+  starts: Date,
+  members: GeneratedMember[],
+  t: Tables,
+) {
+  const rng = new Rng(`open-service:${cfg.key}`);
+  const name = (g: GeneratedMember) => `${g.member.first_name} ${g.member.last_name}`;
+  const pending = cfg.key === "grace" ? ["Beatrice Flomo", "Grace Doe"] : ["Korto Wleh"];
+  const failed = cfg.key === "grace" ? ["Felix Massaquoi"] : [];
+  const notYet = cfg.key === "grace" ? ["Daniel Toe", "Joseph Kpoto"] : [];
+  let minute = -20;
+  for (const g of members) {
+    const n = name(g);
+    if (notYet.includes(n)) continue;
+    const isPending = pending.includes(n);
+    const isFailed = failed.includes(n);
+    const p = g.profile === "regular" ? 0.62 : g.profile === "steady" ? 0.32 : g.profile === "new" ? 0.4 : 0;
+    const featuredIn = n === "Abraham Sumo" || n === "Esther Kollie";
+    if (!isPending && !isFailed && !featuredIn && !rng.chance(p)) continue;
+    minute += rng.int(0, 1);
+    const at = addMinutes(starts, Math.min(minute, 35));
+    t.attendance.push({
+      id: uuidFrom(`att:${serviceId}:${g.member.id}`),
+      church_id: churchId,
+      service_id: serviceId,
+      member_id: g.member.id,
+      checked_in_at: iso(at),
+      sync_state: isFailed ? "error" : isPending ? "pending" : "synced",
+      sync_error: isFailed ? "Timed out reaching the server" : null,
+      device: isPending || isFailed ? "This device" : "Usher tablet 1",
+      created_at: iso(at),
+    });
   }
 }
 
@@ -1084,7 +1133,7 @@ export function generateSeed(now: Date, epoch: Date): Tables {
     churches: [], staff: [], departments: [], members: [], member_departments: [], services: [],
     attendance: [], giving_entries: [], giving_drafts: [], day_closes: [], prospects: [],
     follow_up_events: [], tasks: [], events: [], messages: [], sms_wallet: [], support_grants: [],
-    audit_events: [],
+    audit_events: [], import_jobs: [],
   };
   for (const cfg of DEMO_CHURCH_CONFIGS) generateChurch(cfg, now, epoch, t);
   generatePlatformOnly(now, t);

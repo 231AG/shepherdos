@@ -5,11 +5,16 @@ import { create } from "zustand";
 import { cn } from "@/lib/cn";
 
 type Tone = "success" | "info" | "warning";
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
 interface ToastItem {
   id: number;
   title: string;
   body?: string;
   tone: Tone;
+  action?: ToastAction;
 }
 
 const useToasts = create<{ items: ToastItem[]; push: (t: Omit<ToastItem, "id">) => void; dismiss: (id: number) => void }>((set) => ({
@@ -17,13 +22,13 @@ const useToasts = create<{ items: ToastItem[]; push: (t: Omit<ToastItem, "id">) 
   push: (t) => {
     const id = Date.now() + Math.random();
     set((s) => ({ items: [...s.items.slice(-2), { ...t, id }] }));
-    setTimeout(() => set((s) => ({ items: s.items.filter((x) => x.id !== id) })), 4200);
+    setTimeout(() => set((s) => ({ items: s.items.filter((x) => x.id !== id) })), t.action ? 6000 : 4200);
   },
   dismiss: (id) => set((s) => ({ items: s.items.filter((x) => x.id !== id) })),
 }));
 
-export function toast(title: string, opts: { body?: string; tone?: Tone } = {}) {
-  useToasts.getState().push({ title, body: opts.body, tone: opts.tone ?? "success" });
+export function toast(title: string, opts: { body?: string; tone?: Tone; action?: ToastAction } = {}) {
+  useToasts.getState().push({ title, body: opts.body, tone: opts.tone ?? "success", action: opts.action });
 }
 
 /** For features outside the demo's scope: say so instead of doing nothing. */
@@ -57,6 +62,18 @@ export function Toaster() {
               <p className="text-sm font-semibold">{t.title}</p>
               {t.body && <p className="mt-0.5 text-sm text-navy-200">{t.body}</p>}
             </div>
+            {t.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  t.action!.onClick();
+                  dismiss(t.id);
+                }}
+                className="-my-1 inline-flex h-9 shrink-0 items-center rounded-lg px-3 text-sm font-semibold text-gold hover:bg-navy-700"
+              >
+                {t.action.label}
+              </button>
+            )}
             <button
               type="button"
               aria-label="Dismiss"

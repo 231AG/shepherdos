@@ -68,7 +68,7 @@ export function MembershipSnapshot() {
         ))}
       </ul>
       <div className="mt-auto px-5 pb-5 pt-4">
-        <ButtonLink href={`${churchHref(church.slug, "members")}?import=1`} variant="secondary" className="w-full" icon={<Upload className="size-4" aria-hidden />}>
+        <ButtonLink href={churchHref(church.slug, "members/import")} variant="secondary" className="w-full" icon={<Upload className="size-4" aria-hidden />}>
           Import notebook spreadsheet
         </ButtonLink>
       </div>

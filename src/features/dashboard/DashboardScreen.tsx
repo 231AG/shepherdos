@@ -46,7 +46,7 @@ export function DashboardScreen() {
     if (role === "pastor" && canAccess(role, "giving", church.settings))
       actions.push({ label: "Record giving", href: href("giving"), icon: <CircleDollarSign className="size-4" aria-hidden /> });
     if (role === "pastor" || role === "secretary") actions.push({ label: "Add member", href: `${href("members")}?new=1`, icon: <UserPlus className="size-4" aria-hidden /> });
-    if (role === "secretary") actions.push({ label: "Import", href: `${href("members")}?import=1`, icon: <Upload className="size-4" aria-hidden /> });
+    if (role === "secretary") actions.push({ label: "Import", href: href("members/import"), icon: <Upload className="size-4" aria-hidden /> });
     if (isDept) actions.push({ label: `${scope.department.name} members`, href: href("members"), icon: <Users className="size-4" aria-hidden /> });
   }
 

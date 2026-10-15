@@ -15,6 +15,10 @@ export function normalizePhone(raw: string | null | undefined): PhoneResult {
   const input = (raw ?? "").trim();
   if (!input) return { ok: false, e164: null, error: "Phone number is empty" };
   let digits = input.replace(/\D/g, "");
+  if (!digits) return { ok: false, e164: null, error: "Not a phone number" };
+  if (input.startsWith("+") && !input.replace(/\s/g, "").startsWith("+231")) {
+    return { ok: false, e164: null, error: "Not a Liberian (+231) number" };
+  }
   if (digits.startsWith("00231")) digits = digits.slice(5);
   else if (digits.startsWith("231") && digits.length === 12) digits = digits.slice(3);
   else if (digits.startsWith("0") && digits.length === 10) digits = digits.slice(1);

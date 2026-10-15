@@ -360,6 +360,7 @@ function ManageSheet({ church, onClose, db }: { church: Church | null; onClose: 
 function ProvisionModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [form, setForm] = useState({ name: "", city: "", county: "Montserrado", adminName: "", adminPhone: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const mark = useGuideMark();
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const submit = () => {
     const errs: Record<string, string> = {};
@@ -371,6 +372,7 @@ function ProvisionModal({ open, onClose }: { open: boolean; onClose: () => void 
     setErrors(errs);
     if (Object.keys(errs).length) return;
     provisionChurch({ ...form, name: form.name.trim(), city: form.city.trim(), adminPhone: phone.e164! });
+    mark("provision_church");
     toast("Church provisioned", { body: `${form.name.trim()} is onboarding. An invite was sent to ${form.adminName.trim()} (simulated).` });
     setForm({ name: "", city: "", county: "Montserrado", adminName: "", adminPhone: "" });
     onClose();
