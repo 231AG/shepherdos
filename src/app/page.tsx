@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Building2, Coins, MessageSquareText, ShieldCheck, WifiOff } from "lucide-react";
+import { ArrowRight, Building2, Coins, MessageSquareText, WifiOff } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { ButtonLink } from "@/components/ui/Button";
 
 export const metadata: Metadata = {
-  title: { absolute: "ShepherdOS demo: church management for Liberian churches" },
+  title: { absolute: "Church Connect: church management for Liberian churches" },
 };
 
 const POINTS = [
@@ -59,12 +59,6 @@ export default function Landing() {
                 Start the demo
               </ButtonLink>
             </div>
-            <p className="mt-6 flex max-w-md items-start gap-2.5 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-teal-ink" aria-hidden />
-              <span>
-                <span className="font-semibold text-navy">Demo with fictional data.</span> Nothing you do here is real or shared.
-              </span>
-            </p>
           </div>
           <div className="relative">
             <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-overlay">
@@ -72,7 +66,7 @@ export default function Landing() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/dashboard-preview.jpg"
-                alt="ShepherdOS church dashboard showing members, Sunday attendance for the last 12 weeks, and October giving in LRD and USD"
+                alt="Church Connect dashboard showing members, Sunday attendance for the last 12 weeks, and October giving in LRD and USD"
                 width={1280}
                 height={800}
                 fetchPriority="high"
@@ -113,7 +107,7 @@ export default function Landing() {
                 Explore it as a pastor, secretary, treasurer, department head or ComNet operator
               </h2>
               <p className="mt-2 max-w-2xl text-ink">
-                Each role sees a different slice of the same church. Two fictional churches show that their data never mixes.
+                Each role sees a different slice of the same church. Two sample churches show that their data never mixes.
               </p>
             </div>
             <ButtonLink href="/demo/" size="lg" className="shrink-0">
@@ -126,7 +120,7 @@ export default function Landing() {
       <footer className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-muted sm:flex-row sm:justify-between sm:px-6">
         <p>Prepared for EduBridge Technologies and ComNet IT Solutions.</p>
         <p>
-          ShepherdOS is a working name. <Link href="/demo/" className="font-semibold text-teal-ink underline underline-offset-4">Open the demo</Link>
+          <Link href="/demo/" className="font-semibold text-teal-ink underline underline-offset-4">Open the demo</Link>
         </p>
       </footer>
     </div>

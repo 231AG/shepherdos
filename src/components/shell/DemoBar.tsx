@@ -46,7 +46,6 @@ export function DemoBar({ churchSlug }: { churchSlug: string | null }) {
     <>
       <div className="sticky top-0 z-30 flex h-11 items-center gap-2 bg-navy-950 px-2 text-sm text-white sm:px-4">
         <span className="hidden rounded-md bg-gold px-2 py-0.5 text-xs font-bold text-navy sm:inline">Demo</span>
-        <span className="hidden text-navy-200 lg:inline">Fictional data. Nothing here is real or shared.</span>
         <Popover
           label="Switch demo role"
           className="min-w-0 lg:ml-4"

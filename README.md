@@ -1,10 +1,10 @@
-# ShepherdOS demo
+# Church Connect demo
 
-A clickable, front-end-only demo of **ShepherdOS**, a multi-church management platform for Liberian churches: members, Sunday check-in that works offline, LRD and USD giving, and SMS.
+A clickable, front-end-only demo of **Church Connect**, a multi-church management platform for Liberian churches: members, Sunday check-in that works offline, LRD and USD giving, and SMS.
 
 Everything runs in the browser on fictional, generated data. There is no backend, no real sign-in and no real SMS. It is a static export hosted on Vercel.
 
-> Status: **Phase 3 of 6**. Done: foundation, demo sign-in, role and church switching, dashboard, members (directory, profile, add/edit, notebook import), attendance (services, offline Sunday check-in, trends), giving (capture, append-only ledger, reversals, offline drafts, daily close, CSV export) and the platform console with read-only support sessions. Modules from later phases show a short "arrives in phase N" screen.
+> Status: **Phase 4 of 6**. Done: foundation, demo sign-in, role and church switching, dashboard, members (directory, profile, add/edit, notebook import), attendance (services, offline Sunday check-in, trends), giving (ledger, reversals, drafts, daily close, CSV export), platform console with support sessions, departments, soul-winning pipeline and SMS messaging (simulated). Reports, Events, Bible and Settings follow in Phase 5.
 
 ## Run it locally
 
@@ -27,7 +27,8 @@ src/data/types.ts    domain types shaped like the spec's data model
 src/data/store.ts    zustand store, persisted to localStorage (versioned)
 src/data/repo.ts     the repository: every read and write goes through here
 src/data/core.ts     seed + delta merge and write helpers (used only by repository modules)
-src/data/members.ts, attendance.ts, importer.ts, giving.ts   repository modules, re-exported by repo.ts
+src/data/members.ts, attendance.ts, importer.ts, giving.ts,
+  departments.ts, soulwinning.ts, messaging.ts           repository modules, re-exported by repo.ts
 ```
 
 - **Generated relative to today.** The seed is rebuilt on every page load from the current date, so "last 12 Sundays" are always the most recent 12 Sundays and nothing looks stale.
@@ -56,27 +57,31 @@ The Online/Offline switch in the header simulates the network. Offline check-ins
 
 A platform operator can only open a church's records under an approved, time-limited grant. In the Platform console, "Open church" starts a read-only session (dashboard, members without phone numbers, attendance; never giving) with a countdown bar. When the grant expires the session ends by itself. Requests for access appear on the church pastor's dashboard to approve or deny. Every step writes an audit event.
 
+### Messaging (simulated)
+
+No SMS is ever sent. The composer counts characters and SMS segments (160 GSM-7 characters, or 70 when the text needs Unicode; split messages use 153 / 67), excludes opted-out members and members without a phone, and prices the send in credits. Sending captures credits from the church wallet, steps through queued, sending, sent and delivered, and returns credits for the few deliveries that fail. Sending is blocked when the wallet is short or the device is offline.
+
 ### What the full version replaces
 
 Only the repository modules in `src/data/` (and `src/data/store.ts` for local UI state) change. Queries become Supabase reads under row-level security; commands (`logFollowUpNote`, `syncNow`, later `checkIn`, `postGiving`, `reverseGiving`) become server actions or Postgres RPCs; the offline queue moves to IndexedDB behind a service worker. Components keep calling the same functions. `src/mock/` is deleted.
 
 ## Swapping the logo
 
-The placeholder logo lives in one component: `src/components/brand/Logo.tsx`.
+The logo is drawn in one component: `src/components/brand/Logo.tsx` (`BRAND_NAME`, `LogoMark`, `Logo`). The mark image is `public/brand/church-connect-mark-160.png` (UI) and `public/brand/church-connect-mark.png` (512 px, used for icons), both cut from the supplied logo with a transparent background. The full logo with wordmark is `public/brand/church-connect-logo.png`.
 
-1. Replace the `<svg>` inside `LogoMark` with the real mark (keep a square `viewBox`). Adjust the wordmark in `Logo` if needed.
-2. Regenerate the favicon and app icons from it:
+1. Replace the PNGs in `public/brand/` (keep them square with a transparent background), and change `BRAND_NAME` if the name changes.
+2. Regenerate the favicon and app icons:
    ```bash
    npm run build
    npm run serve        # leave running
    npm run icons        # writes public/icons/* and public/favicon.ico
    ```
    The script screenshots the hidden `/brand-preview/` page, which renders `LogoMark`.
-3. Optionally refresh the landing page screenshot with `npm run shots:landing`.
+3. Refresh the landing page screenshot with `npm run shots:landing`, then rebuild.
 
 ## Design tokens
 
-Colours, fonts and shadows are Tailwind theme tokens in `src/app/globals.css`. The default Tailwind palette is removed, so components can only use the ShepherdOS tokens. Teal text and white-on-teal buttons use `teal-ink` (#0E6B63) for WCAG AA contrast; `teal` (#16877E) is for fills, icons and charts.
+Colours, fonts and shadows are Tailwind theme tokens in `src/app/globals.css`. The default Tailwind palette is removed, so components can only use the Church Connect tokens. Teal text and white-on-teal buttons use `teal-ink` (#0E6B63) for WCAG AA contrast; `teal` (#16877E) is for fills, icons and charts.
 
 ## Visual checks
 
@@ -86,6 +91,7 @@ node scripts/screenshot.mjs http://localhost:4173 ./shots pastor /c/grace-fellow
 node scripts/smoke.mjs           # clicks through the main demo flows
 node scripts/smoke-phase2.mjs    # members, import and check-in flows
 node scripts/smoke-phase3.mjs    # giving ledger rules and support sessions
+node scripts/smoke-phase4.mjs    # departments, soul-winning and messaging
 node scripts/find-overflow.mjs http://localhost:4173/platform/ 390 operator
 ```
 

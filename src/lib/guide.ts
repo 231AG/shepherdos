@@ -24,8 +24,8 @@ export const GUIDE: Record<RoleId, GuideItem[]> = {
     { key: "add_member", label: "Add a new member", hint: "Type a phone like 0886 123 456 and watch it become +231." },
     { key: "checkin_offline", label: "Check someone in while offline", hint: "Switch to Offline in the header, tap a name, then go back online." },
     { key: "retry_sync", label: "Retry the check-in that failed", hint: "On Check-in, tap the red row (Felix Massaquoi) to retry." },
-    { key: "view_trends", label: "Look at attendance trends", hint: "Attendance, then the Trends tab." },
-    { key: "switch_role", label: "Compare with the Pastor's view", hint: "Use Switch role in the demo bar." },
+    { key: "send_sms", label: "Send an SMS to a department", hint: "Messaging: pick a department, write a message and watch the cost and delivery." },
+    { key: "convert_prospect", label: "Convert a prospect to a member", hint: "Soul-winning: open someone in Ready to join and convert them." },
   ],
   treasurer: [
     { key: "record_giving", label: "Record a gift", hint: "Giving, then Record giving. Pick LRD or USD, a member and an amount, then Post entry." },

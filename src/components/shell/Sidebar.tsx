@@ -38,9 +38,13 @@ export function Sidebar() {
         )}
       >
         <div className={cn("flex h-16 items-center px-4", !expanded && "max-lg:justify-center max-lg:px-0")}>
-          <Link href={churchHref(church.slug, "")} aria-label="ShepherdOS dashboard">
-            <Logo tone="onDark" className={cn(!expanded && "max-lg:hidden")} />
-            <Logo variant="mark" className={cn("hidden", !expanded && "max-lg:block")} />
+          <Link href={churchHref(church.slug, "")} aria-label="Church Connect dashboard">
+            <span className={cn("block", !expanded && "max-lg:hidden")}>
+              <Logo tone="onDark" />
+            </span>
+            <span className={cn("hidden", !expanded && "max-lg:block")}>
+              <Logo variant="mark" />
+            </span>
           </Link>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-2">

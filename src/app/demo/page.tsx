@@ -10,7 +10,7 @@ export default function DemoSignIn() {
   return (
     <div className="min-h-dvh bg-cloud">
       <header className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" aria-label="ShepherdOS demo home">
+        <Link href="/" aria-label="Church Connect home">
           <Logo />
         </Link>
         <Link href="/" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-navy hover:underline">
@@ -27,7 +27,7 @@ export default function DemoSignIn() {
         </div>
         <p className="mt-8 flex items-start gap-2.5 text-sm text-muted">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-teal-ink" aria-hidden />
-          Demo with fictional data. Nothing you do here is real or shared. Your changes stay in this browser until you reset them.
+          Your changes stay in this browser until you reset them.
         </p>
       </main>
     </div>
