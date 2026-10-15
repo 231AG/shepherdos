@@ -84,12 +84,14 @@ export interface Member {
   last_name: string;
   /** E.164, e.g. +231771234567. Null when unknown. */
   phone: string | null;
-  gender: "female" | "male";
+  gender: "female" | "male" | null;
   joined_on: ISODate;
   exception: MemberException | null;
   sms_opt_out: boolean;
   household: string | null;
   converted_from_prospect_id: UUID | null;
+  /** Set when the member came in through the spreadsheet import. */
+  imported_at: ISODateTime | null;
   created_at: ISODateTime;
 }
 
@@ -278,6 +280,19 @@ export interface SupportGrant {
   status: "requested" | "approved" | "denied" | "ended";
   approved_by: string | null;
   expires_at: ISODateTime | null;
+  created_at: ISODateTime;
+}
+
+export interface ImportJob {
+  id: UUID;
+  church_id: UUID;
+  file_name: string;
+  rows: number;
+  added: number;
+  merged: number;
+  skipped: number;
+  errors: number;
+  imported_by: string;
   created_at: ISODateTime;
 }
 

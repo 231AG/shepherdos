@@ -12,6 +12,8 @@ import { STORE_KEY, STORE_VERSION } from "./constants";
 export interface TableDelta<T> {
   added: T[];
   patched: Record<string, Partial<T>>;
+  /** Ids removed by the visitor (only used to undo their own check-ins). */
+  removed?: string[];
 }
 
 export type Deltas = { [K in TableName]?: TableDelta<Tables[K][number]> };
@@ -23,6 +25,9 @@ export interface DemoState {
   online: boolean;
   deltas: Deltas;
   guide: Record<string, true>;
+  /** Ids currently animating from pending to synced. Not persisted. */
+  syncing: string[];
+  setSyncing: (ids: string[]) => void;
   setRole: (role: RoleId) => void;
   setOnline: (online: boolean) => void;
   markGuide: (key: string) => void;
@@ -68,6 +73,8 @@ export const useDemoStore = create<DemoState>()(
   persist(
     (set) => ({
       ...initial(),
+      syncing: [],
+      setSyncing: (ids) => set({ syncing: ids }),
       setRole: (role) => set({ role }),
       setOnline: (online) => set({ online }),
       markGuide: (key) => set((s) => (s.guide[key] ? s : { guide: { ...s.guide, [key]: true } })),

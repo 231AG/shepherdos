@@ -7,11 +7,11 @@
  * deltas. In the full build only this module changes: queries become
  * Supabase reads under RLS and commands become server actions/RPCs.
  */
-import { useMemo } from "react";
 import { endOfMonth, isWithinInterval, parseISO, startOfMonth, subDays } from "date-fns";
-import { generateSeed, OPERATOR_NAME, type TableName, type Tables } from "@/mock/seed";
+import { OPERATOR_NAME, type Tables } from "@/mock/seed";
 import { randomUuid } from "@/mock/prng";
-import { useDemoStore, type Deltas, type TableDelta } from "./store";
+import { useDemoStore } from "./store";
+import { addRow, memo, patchRow, type Db } from "./core";
 import type {
   ChurchEvent,
   Church,
@@ -24,83 +24,9 @@ import type {
   StaffUser,
 } from "./types";
 import { GIVING_TYPES } from "./types";
-import { lastSunday, toISODate, today } from "@/lib/dates";
+import { lastSunday, toISODate } from "@/lib/dates";
 import { deriveStatus, type MemberStatus, type StatusResult } from "@/lib/status";
 import { emptyTotals, type CurrencyTotals } from "@/lib/money";
-
-export type Db = Tables & { now: Date; epoch: Date };
-
-/* ------------------------------------------------------------------ */
-/* Seed + delta merge                                                  */
-/* ------------------------------------------------------------------ */
-
-let seedCache: { key: string; tables: Tables } | null = null;
-
-function getSeed(now: Date, epoch: Date): Tables {
-  const key = `${toISODate(now)}:${epoch.getTime()}`;
-  if (!seedCache || seedCache.key !== key) seedCache = { key, tables: generateSeed(now, epoch) };
-  return seedCache.tables;
-}
-
-type Row = { id: string };
-const mergeCache = new Map<TableName, { seed: unknown; delta: unknown; rows: unknown }>();
-
-function mergeTable<T extends Row>(name: TableName, seed: T[], delta: TableDelta<T> | undefined): T[] {
-  if (!delta) return seed;
-  const hit = mergeCache.get(name);
-  if (hit && hit.seed === seed && hit.delta === delta) return hit.rows as T[];
-  const patch = (r: T) => (delta.patched[r.id] ? { ...r, ...delta.patched[r.id] } : r);
-  const rows = seed.map(patch).concat(delta.added.map(patch));
-  mergeCache.set(name, { seed, delta, rows });
-  return rows;
-}
-
-function buildDb(seed: Tables, deltas: Deltas, now: Date, epoch: Date): Db {
-  const db = { now, epoch } as Db;
-  for (const name of Object.keys(seed) as TableName[]) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (db as any)[name] = mergeTable(name, seed[name] as Row[], deltas[name] as TableDelta<Row> | undefined);
-  }
-  return db;
-}
-
-/** Subscribe to the merged database. Re-renders when the visitor changes data. */
-export function useDb(): Db {
-  const deltas = useDemoStore((s) => s.deltas);
-  const epochMs = useDemoStore((s) => s.epoch);
-  return useMemo(() => {
-    const now = today();
-    const epoch = new Date(epochMs);
-    return buildDb(getSeed(now, epoch), deltas, now, epoch);
-  }, [deltas, epochMs]);
-}
-
-/** Per-db memo for derived indexes. A new db (any change) recomputes. */
-const derived = new WeakMap<Db, Map<string, unknown>>();
-function memo<T>(db: Db, key: string, fn: () => T): T {
-  let m = derived.get(db);
-  if (!m) derived.set(db, (m = new Map()));
-  if (!m.has(key)) m.set(key, fn());
-  return m.get(key) as T;
-}
-
-/* ------------------------------------------------------------------ */
-/* Write helpers                                                       */
-/* ------------------------------------------------------------------ */
-
-function addRow<K extends TableName>(table: K, row: Tables[K][number]) {
-  useDemoStore.getState().mutate((d) => {
-    const cur = (d[table] ?? { added: [], patched: {} }) as TableDelta<Tables[K][number]>;
-    return { ...d, [table]: { ...cur, added: [...cur.added, row] } };
-  });
-}
-
-function patchRow<K extends TableName>(table: K, id: string, patch: Partial<Tables[K][number]>) {
-  useDemoStore.getState().mutate((d) => {
-    const cur = (d[table] ?? { added: [], patched: {} }) as TableDelta<Tables[K][number]>;
-    return { ...d, [table]: { ...cur, patched: { ...cur.patched, [id]: { ...cur.patched[id], ...patch } } } };
-  });
-}
 
 /* ------------------------------------------------------------------ */
 /* Churches, staff, personas, scope                                    */
@@ -184,7 +110,7 @@ export function listMembers(db: Db, churchId: string, scope: Scope = { kind: "ch
   return db.members.filter((m) => m.church_id === churchId && (!ids || ids.has(m.id)));
 }
 
-function serviceIndex(db: Db): Map<string, Service> {
+export function serviceIndex(db: Db): Map<string, Service> {
   return memo(db, "svcIndex", () => new Map(db.services.map((s) => [s.id, s])));
 }
 
@@ -192,12 +118,14 @@ function serviceIndex(db: Db): Map<string, Service> {
 export function lastAttendedIndex(db: Db, churchId: string): Map<string, string> {
   return memo(db, `lastAtt:${churchId}`, () => {
     const svc = serviceIndex(db);
+    const todayIso = toISODate(db.now);
     const out = new Map<string, string>();
     for (const a of db.attendance) {
       if (a.church_id !== churchId) continue;
       const s = svc.get(a.service_id);
       if (!s) continue;
-      const day = s.starts_at.slice(0, 10);
+      // A check-in at the open (upcoming) service counts as attending today.
+      const day = s.starts_at.slice(0, 10) > todayIso ? todayIso : s.starts_at.slice(0, 10);
       const cur = out.get(a.member_id);
       if (!cur || day > cur) out.set(a.member_id, day);
     }
@@ -410,39 +338,6 @@ export function resetDemo() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Offline queue                                                       */
-/* ------------------------------------------------------------------ */
-
-/** Items saved on this device that have not reached the (simulated) server. */
-export function pendingSyncCount(db: Db, churchId: string): number {
-  let n = 0;
-  for (const a of db.attendance) if (a.church_id === churchId && a.sync_state !== "synced") n++;
-  for (const d of db.giving_drafts) if (d.church_id === churchId && d.sync_state !== "synced") n++;
-  return n;
-}
-
-/**
- * Replay the offline queue. Pending items become synced. Items already in
- * error stay in error until the visitor retries them.
- */
-export function syncNow(): { total: number } {
-  const state = useDemoStore.getState();
-  let total = 0;
-  for (const table of ["attendance", "giving_drafts"] as const) {
-    const delta = state.deltas[table] as TableDelta<{ id: string; sync_state: string }> | undefined;
-    if (!delta) continue;
-    for (const row of delta.added) {
-      const current = { ...row, ...delta.patched[row.id] };
-      if (current.sync_state === "pending") {
-        patchRow(table, row.id, { sync_state: "synced" });
-        total++;
-      }
-    }
-  }
-  return { total };
-}
-
-/* ------------------------------------------------------------------ */
 /* Platform console (operator)                                         */
 /* ------------------------------------------------------------------ */
 
@@ -503,3 +398,8 @@ export function provisionChurch(input: { name: string; city: string; county: str
   });
   audit(id, OPERATOR_NAME, `Church provisioned: ${input.name}. Invite sent to ${input.adminName} (${input.adminPhone}).`);
 }
+
+export { useDb, type Db } from "./core";
+export * from "./members";
+export * from "./attendance";
+export * from "./importer";

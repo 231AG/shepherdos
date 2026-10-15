@@ -26,7 +26,7 @@ for (const width of widths) {
     await page.goto(base + p, { waitUntil: "networkidle" });
     await page.waitForTimeout(400);
     const name = `${(role === "-" ? "anon" : role)}${p.replace(/[/?=&]+/g, "_")}_${width}.png`.replace(/_+/g, "_");
-    await page.screenshot({ path: `${outDir}/${name}`, fullPage: true });
+    await page.screenshot({ path: `${outDir}/${name}`, fullPage: process.env.FULL !== "0" });
     // Horizontal overflow check
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if (overflow > 0) errors.push(`[${width}] ${p}: horizontal overflow ${overflow}px`);

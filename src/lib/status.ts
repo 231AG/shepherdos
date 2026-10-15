@@ -47,6 +47,14 @@ export function deriveStatus(
     return { status: "new", detail: `Joined ${joinedDays === 0 ? "today" : `${joinedDays}d ago`}`, last_attended: lastAttended };
   }
   const windowDays = settings.inactive_weeks * 7;
+  // Imported members have no attendance history in ShepherdOS yet. Until they
+  // have been in the system for a full window, they are not called inactive.
+  if (member.imported_at && (!lastAttended || lastAttended < member.imported_at.slice(0, 10))) {
+    const sinceImport = differenceInCalendarDays(now, parseISO(member.imported_at));
+    if (sinceImport < windowDays) {
+      return { status: "new", detail: "Imported · awaiting first check-in", last_attended: lastAttended };
+    }
+  }
   if (lastAttended) {
     const since = differenceInCalendarDays(now, parseISO(lastAttended));
     if (since < windowDays) return { status: "active", detail: "", last_attended: lastAttended };
