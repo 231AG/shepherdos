@@ -1,4 +1,4 @@
-/** Realistic Liberian names for fictional demo members. */
+/** Realistic Liberian names for demo members. */
 
 export const SURNAMES_COMMON = [
   "Kollie", "Flomo", "Sumo", "Kpoto", "Tarr", "Kamara", "Doe", "Toe", "Wleh", "Gono",

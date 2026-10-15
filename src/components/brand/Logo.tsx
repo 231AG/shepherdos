@@ -1,27 +1,32 @@
 import { cn } from "@/lib/cn";
 
 /**
- * PLACEHOLDER LOGO. This is the only place the brand mark is drawn.
- * To swap in the real logo: replace the <svg> in `LogoMark` (keep the
- * square viewBox), adjust the wordmark if needed, then run
- * `npm run icons` to regenerate the favicon and PWA icons. See README.
+ * Church Connect brand. This is the only place the logo is drawn.
+ * The mark image lives in public/brand/ (cut from the supplied logo with a
+ * transparent background). To change the logo: replace those PNGs, adjust
+ * the wordmark below if needed, then run `npm run icons` to regenerate the
+ * favicon and app icons. See README.
  */
 
-export function LogoMark({ className, title }: { className?: string; title?: string }) {
+export const BRAND_NAME = "Church Connect";
+
+export function LogoMark({ className, title, size = "md" }: { className?: string; title?: string; size?: "md" | "lg" }) {
   return (
-    <svg viewBox="0 0 32 32" className={cn("shrink-0", className)} role={title ? "img" : undefined} aria-hidden={title ? undefined : true} aria-label={title}>
-      <rect width="32" height="32" rx="8" className="fill-gold" />
-      {/* Shepherd's crook */}
-      <path
-        d="M13 26.5V12.5a5 5 0 0 1 10 0v1.75"
-        fill="none"
-        className="stroke-navy"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+    <span
+      className={cn("inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-line", className)}
+      role={title ? "img" : undefined}
+      aria-label={title}
+      aria-hidden={title ? undefined : true}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={size === "lg" ? "/brand/church-connect-mark.png" : "/brand/church-connect-mark-160.png"}
+        alt=""
+        className="h-[86%] w-[86%] object-contain"
+        width={160}
+        height={160}
       />
-      <circle cx="23" cy="17.4" r="1.6" className="fill-navy" />
-    </svg>
+    </span>
   );
 }
 
@@ -39,14 +44,12 @@ export function Logo({
   markClassName?: string;
   subtitle?: string;
 }) {
-  if (variant === "mark") return <LogoMark className={cn("size-8", markClassName, className)} title="ShepherdOS" />;
+  if (variant === "mark") return <LogoMark className={cn("size-9", markClassName, className)} title={BRAND_NAME} />;
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <LogoMark className={cn("size-8", markClassName)} />
+      <LogoMark className={cn("size-9", markClassName)} />
       <span className="flex flex-col leading-none">
-        <span className={cn("font-heading text-[17px] font-extrabold tracking-tight", tone === "onDark" ? "text-white" : "text-navy")}>
-          ShepherdOS
-        </span>
+        <span className={cn("font-heading text-[17px] font-extrabold tracking-tight", tone === "onDark" ? "text-white" : "text-navy")}>{BRAND_NAME}</span>
         {subtitle && <span className={cn("mt-1 text-[11px] font-medium", tone === "onDark" ? "text-navy-200" : "text-muted")}>{subtitle}</span>}
       </span>
     </span>

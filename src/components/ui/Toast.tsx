@@ -35,7 +35,7 @@ export function toast(title: string, opts: { body?: string; tone?: Tone; action?
 export function fullVersionToast(feature?: string) {
   toast("Available in the full version", {
     tone: "info",
-    body: feature ? `${feature} is part of the full ShepherdOS build, not this demo.` : "This part is not included in the demo.",
+    body: feature ? `${feature} is part of the full Church Connect build, not this demo.` : "This part is not included in the demo.",
   });
 }
 

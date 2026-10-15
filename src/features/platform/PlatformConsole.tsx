@@ -479,7 +479,7 @@ function SubscriptionsTab() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-3xl font-extrabold">Subscriptions</h1>
-        <p className="mt-1 text-sm text-muted">Annual hosting is USD 850 per church. Billing is tracked here; payments are handled outside ShepherdOS.</p>
+        <p className="mt-1 text-sm text-muted">Annual hosting is USD 850 per church. Billing is tracked here; payments are handled outside Church Connect.</p>
       </div>
       <Card>
         <Table>

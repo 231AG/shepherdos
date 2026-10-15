@@ -61,7 +61,7 @@ function HydratedShell({ slug, children }: { slug: string; children: ReactNode }
           <Logo />
           <h1 className="mt-8 text-3xl font-bold">Choose a role to continue</h1>
           <p className="mt-2 max-w-xl text-muted">
-            This link opens the ShepherdOS demo. Pick who you want to be; you can switch at any time from the bar at the top.
+            This link opens the Church Connect demo. Pick who you want to be; you can switch at any time from the bar at the top.
           </p>
           <div className="mt-8">
             <RolePicker churchSlug={slug} />

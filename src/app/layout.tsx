@@ -11,10 +11,10 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: { default: "ShepherdOS demo", template: "%s · ShepherdOS demo" },
+  title: { default: "Church Connect demo", template: "%s · Church Connect" },
   description:
-    "Interactive demo of ShepherdOS, church management for Liberian churches: members, Sunday check-in that works offline, LRD and USD giving, and SMS.",
-  applicationName: "ShepherdOS",
+    "Interactive demo of Church Connect, church management for Liberian churches: members, Sunday check-in that works offline, LRD and USD giving, and SMS.",
+  applicationName: "Church Connect",
   icons: {
     icon: [
       { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },

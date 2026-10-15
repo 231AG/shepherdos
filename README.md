@@ -1,6 +1,6 @@
-# ShepherdOS demo
+# Church Connect demo
 
-A clickable, front-end-only demo of **ShepherdOS**, a multi-church management platform for Liberian churches: members, Sunday check-in that works offline, LRD and USD giving, and SMS.
+A clickable, front-end-only demo of **Church Connect**, a multi-church management platform for Liberian churches: members, Sunday check-in that works offline, LRD and USD giving, and SMS.
 
 Everything runs in the browser on fictional, generated data. There is no backend, no real sign-in and no real SMS. It is a static export hosted on Vercel.
 
@@ -62,21 +62,21 @@ Only the repository modules in `src/data/` (and `src/data/store.ts` for local UI
 
 ## Swapping the logo
 
-The placeholder logo lives in one component: `src/components/brand/Logo.tsx`.
+The logo is drawn in one component: `src/components/brand/Logo.tsx` (`BRAND_NAME`, `LogoMark`, `Logo`). The mark image is `public/brand/church-connect-mark-160.png` (UI) and `public/brand/church-connect-mark.png` (512 px, used for icons), both cut from the supplied logo with a transparent background. The full logo with wordmark is `public/brand/church-connect-logo.png`.
 
-1. Replace the `<svg>` inside `LogoMark` with the real mark (keep a square `viewBox`). Adjust the wordmark in `Logo` if needed.
-2. Regenerate the favicon and app icons from it:
+1. Replace the PNGs in `public/brand/` (keep them square with a transparent background), and change `BRAND_NAME` if the name changes.
+2. Regenerate the favicon and app icons:
    ```bash
    npm run build
    npm run serve        # leave running
    npm run icons        # writes public/icons/* and public/favicon.ico
    ```
    The script screenshots the hidden `/brand-preview/` page, which renders `LogoMark`.
-3. Optionally refresh the landing page screenshot with `npm run shots:landing`.
+3. Refresh the landing page screenshot with `npm run shots:landing`, then rebuild.
 
 ## Design tokens
 
-Colours, fonts and shadows are Tailwind theme tokens in `src/app/globals.css`. The default Tailwind palette is removed, so components can only use the ShepherdOS tokens. Teal text and white-on-teal buttons use `teal-ink` (#0E6B63) for WCAG AA contrast; `teal` (#16877E) is for fills, icons and charts.
+Colours, fonts and shadows are Tailwind theme tokens in `src/app/globals.css`. The default Tailwind palette is removed, so components can only use the Church Connect tokens. Teal text and white-on-teal buttons use `teal-ink` (#0E6B63) for WCAG AA contrast; `teal` (#16877E) is for fills, icons and charts.
 
 ## Visual checks
 
