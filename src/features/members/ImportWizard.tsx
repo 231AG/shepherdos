@@ -16,7 +16,6 @@ import {
   type ImportReview,
   type ReviewRow,
 } from "@/data/repo";
-import { canAccess } from "@/lib/access";
 import { cn, plural } from "@/lib/cn";
 import { downloadCsv } from "@/lib/csv";
 import { fmtDate } from "@/lib/dates";
@@ -87,7 +86,7 @@ export function ImportWizard() {
   const [problem, setProblem] = useState<string | null>(null);
   const [done, setDone] = useState<{ added: number; merged: number; skipped: number } | null>(null);
 
-  if (!(role === "pastor" || role === "secretary") || !canAccess(role, "members")) {
+  if (!(role === "pastor" || role === "secretary")) {
     return <NoAccess body={`${ROLES[role].label}: ${ROLES[role].limits} Importing members is for the Pastor and Secretary.`} primary={{ href: churchHref(church.slug, "members"), label: "Back to members" }} />;
   }
 

@@ -372,6 +372,53 @@ function audit(churchId: string | null, actor: string, action: string) {
 export function endSupportGrant(grantId: string, churchName: string) {
   patchRow("support_grants", grantId, { status: "ended", expires_at: new Date().toISOString() });
   audit(null, OPERATOR_NAME, `Support access to ${churchName} ended early by A. Sumo.`);
+  const session = useDemoStore.getState().supportSession;
+  if (session?.grantId === grantId) useDemoStore.getState().setSupportSession(null);
+}
+
+/** Live grant for a church, if any. */
+export function liveGrantFor(db: Db, churchId: string, at: Date) {
+  return db.support_grants.find((g) => g.church_id === churchId && isGrantLive(g, at));
+}
+
+export function pendingGrantFor(db: Db, churchId: string) {
+  return db.support_grants.find((g) => g.church_id === churchId && g.status === "requested");
+}
+
+/** Operator asks a church for time-limited, read-only access. The church admin decides. */
+export function requestSupportAccess(church: Church, reason: string) {
+  addRow("support_grants", {
+    id: randomUuid(),
+    church_id: church.id,
+    operator_name: OPERATOR_NAME,
+    reason,
+    status: "requested",
+    approved_by: null,
+    expires_at: null,
+    created_at: new Date().toISOString(),
+  });
+  audit(church.id, OPERATOR_NAME, `A. Sumo requested support access to ${church.short_name}: ${reason.toLowerCase()}.`);
+}
+
+/** Church admin's answer to a support request. Approved grants last 2 hours, read-only. */
+export function decideSupportRequest(grantId: string, church: Church, approve: boolean, approver: string) {
+  if (approve) {
+    patchRow("support_grants", grantId, { status: "approved", approved_by: approver, expires_at: new Date(Date.now() + 2 * 3600_000).toISOString() });
+    audit(church.id, approver, `Support grant approved for A. Sumo at ${church.short_name} (2 hours, read-only).`);
+  } else {
+    patchRow("support_grants", grantId, { status: "denied", approved_by: approver });
+    audit(church.id, approver, `Support request from A. Sumo denied at ${church.short_name}.`);
+  }
+}
+
+export function startSupportSession(grantId: string, church: Church) {
+  useDemoStore.getState().setSupportSession({ grantId, churchSlug: church.slug });
+  audit(church.id, OPERATOR_NAME, `A. Sumo opened ${church.short_name} under a support grant (read-only).`);
+}
+
+export function endSupportSession(church: Church, reason: "ended" | "expired") {
+  useDemoStore.getState().setSupportSession(null);
+  audit(church.id, OPERATOR_NAME, reason === "expired" ? `Support session at ${church.short_name} ended: grant expired.` : `A. Sumo left the support session at ${church.short_name}.`);
 }
 
 export function provisionChurch(input: { name: string; city: string; county: string; adminName: string; adminPhone: string }) {
@@ -403,3 +450,4 @@ export { useDb, type Db } from "./core";
 export * from "./members";
 export * from "./attendance";
 export * from "./importer";
+export * from "./giving";

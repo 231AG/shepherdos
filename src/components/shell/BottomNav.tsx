@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { canAccess } from "@/lib/access";
 import { cn } from "@/lib/cn";
 import { Sheet } from "@/components/ui/Dialog";
 import { useChurch } from "./ChurchContext";
@@ -13,12 +12,12 @@ import { isActive } from "./Sidebar";
 
 /** Phone navigation: four key actions for the role, plus "More". */
 export function BottomNav() {
-  const { church, role } = useChurch();
+  const { church, can } = useChurch();
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
-  const primary = MOBILE_PRIMARY.filter((n) => canAccess(role, n.module, church.settings)).slice(0, 4);
+  const primary = MOBILE_PRIMARY.filter((n) => can(n.module)).slice(0, 4);
   const primaryPaths = new Set(primary.map((p) => p.path));
-  const rest = NAV.filter((n) => canAccess(role, n.module, church.settings) && !primaryPaths.has(n.path));
+  const rest = NAV.filter((n) => can(n.module) && !primaryPaths.has(n.path));
   const checkinActive = pathname.includes("/attendance/check-in");
 
   return (

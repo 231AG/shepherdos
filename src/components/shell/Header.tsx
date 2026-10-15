@@ -4,7 +4,7 @@ import { Bell, LogOut, Search, UserRoundCog } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { listOpenTasks, pendingSyncCount, upcomingEvents, useDb } from "@/data/repo";
+import { allPendingDrafts, listOpenTasks, pendingGrantFor, pendingSyncCount, upcomingEvents, useDb } from "@/data/repo";
 import { canSeeGivingTotals } from "@/lib/access";
 import { fmtDate } from "@/lib/dates";
 import { Avatar } from "@/components/ui/misc";
@@ -20,9 +20,21 @@ import { useDemoStore } from "@/data/store";
 
 function SyncPill() {
   const db = useDb();
-  const { church } = useChurch();
+  const { church, role } = useChurch();
   const online = useDemoStore((s) => s.online);
   const pending = pendingSyncCount(db, church.id);
+  const drafts = role === "treasurer" ? allPendingDrafts(db, church.id).length : 0;
+  if (drafts > 0 && pending === 0 && online) {
+    return (
+      <Link
+        href={churchHref(church.slug, "giving")}
+        className="hidden h-8 shrink-0 items-center gap-2 rounded-full bg-gold-soft px-3 text-xs font-semibold text-gold-ink hover:underline min-[1400px]:inline-flex"
+      >
+        <span className="size-2 rounded-full bg-gold" aria-hidden />
+        {drafts} offline draft{drafts === 1 ? "" : "s"} awaiting review
+      </Link>
+    );
+  }
   if (pending === 0 && online) {
     return (
       <span className="hidden h-8 shrink-0 items-center gap-2 rounded-full bg-teal-soft px-3 text-xs font-semibold text-teal-ink min-[1400px]:inline-flex">
@@ -49,6 +61,8 @@ function Notifications() {
   const items: { title: string; body: string; href: string }[] = [];
   if (drafts > 0 && canSeeGivingTotals(role, church.settings) && role === "treasurer")
     items.push({ title: `${drafts} offline giving drafts`, body: "Captured on an usher tablet. Review before closing the day.", href: churchHref(church.slug, "giving") });
+  const request = role === "pastor" ? pendingGrantFor(db, church.id) : undefined;
+  if (request) items.push({ title: "ComNet asked for support access", body: `${request.reason}. Approve or deny on your dashboard.`, href: churchHref(church.slug, "") });
   if (overdue > 0) items.push({ title: `${overdue} overdue follow-up${overdue === 1 ? "" : "s"}`, body: "Pastoral care tasks past their due date.", href: churchHref(church.slug, "") });
   if (next) items.push({ title: next.title, body: `${fmtDate(next.starts_at, "EEE d MMM, h:mm a")} · ${next.location}`, href: churchHref(church.slug, "events") });
 

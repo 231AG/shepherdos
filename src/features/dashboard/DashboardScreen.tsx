@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { CircleDollarSign, FileClock, ScanLine, Upload, UserPlus, Users } from "lucide-react";
 import { dashboardStats, givingSummary, monthRange, sundaySeries, useDb } from "@/data/repo";
-import { canAccess } from "@/lib/access";
 import { fmtDate, greeting } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
 import { ButtonLink } from "@/components/ui/Button";
@@ -16,6 +15,7 @@ import { EventsCard } from "./EventsCard";
 import { GivingCard } from "./GivingCard";
 import { KpiCard } from "./KpiCard";
 import { DepartmentSnapshot, GivingTrendCard, MembershipSnapshot, RecentLedgerCard } from "./SnapshotCards";
+import { SupportRequestCard } from "./SupportRequestCard";
 import { TasksCard } from "./TasksCard";
 
 function greetingName(display: string): string {
@@ -26,7 +26,7 @@ function greetingName(display: string): string {
 
 export function DashboardScreen() {
   const db = useDb();
-  const { church, role, persona, scope } = useChurch();
+  const { church, role, persona, scope, can, support } = useChurch();
   const mark = useGuideMark();
   useEffect(() => {
     mark("view_dashboard");
@@ -42,9 +42,9 @@ export function DashboardScreen() {
     actions.push({ label: "Record giving", href: href("giving"), icon: <CircleDollarSign className="size-4" aria-hidden /> });
     actions.push({ label: "Review drafts", href: `${href("giving")}?drafts=1`, icon: <FileClock className="size-4" aria-hidden /> });
   } else {
-    if (canAccess(role, "attendance")) actions.push({ label: "Start check-in", href: href("attendance/check-in"), icon: <ScanLine className="size-4" aria-hidden /> });
-    if (role === "pastor" && canAccess(role, "giving", church.settings))
-      actions.push({ label: "Record giving", href: href("giving"), icon: <CircleDollarSign className="size-4" aria-hidden /> });
+    if (can("attendance") && !support) actions.push({ label: "Start check-in", href: href("attendance/check-in"), icon: <ScanLine className="size-4" aria-hidden /> });
+    if (role === "pastor" && can("giving"))
+      actions.push({ label: "Giving summary", href: href("giving"), icon: <CircleDollarSign className="size-4" aria-hidden /> });
     if (role === "pastor" || role === "secretary") actions.push({ label: "Add member", href: `${href("members")}?new=1`, icon: <UserPlus className="size-4" aria-hidden /> });
     if (role === "secretary") actions.push({ label: "Import", href: href("members/import"), icon: <Upload className="size-4" aria-hidden /> });
     if (isDept) actions.push({ label: `${scope.department.name} members`, href: href("members"), icon: <Users className="size-4" aria-hidden /> });
@@ -67,6 +67,8 @@ export function DashboardScreen() {
           ))}
         </div>
       </div>
+
+      <SupportRequestCard />
 
       {isDept && (
         <div className="rounded-2xl border border-navy-100 bg-navy-50 px-4 py-3 text-sm text-navy">
@@ -117,7 +119,7 @@ export function DashboardScreen() {
               </div>
             </Card>
             <div className="min-w-0 lg:col-span-2">
-              {role === "secretary" ? <MembershipSnapshot /> : isDept ? <DepartmentSnapshot /> : <GivingCard />}
+              {role === "secretary" || support ? <MembershipSnapshot /> : isDept ? <DepartmentSnapshot /> : <GivingCard />}
             </div>
           </div>
 

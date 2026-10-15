@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import { ModulePreview } from "@/features/preview/ModulePreview";
+import { Suspense } from "react";
+import { GivingScreen } from "@/features/giving/GivingScreen";
+import { ScreenFallback } from "@/components/shell/ScreenFallback";
 
 export const metadata: Metadata = { title: "Giving" };
 
 export default function Page() {
   return (
-    <ModulePreview
-      module="giving"
-      title="Giving"
-      phase={3}
-      points={[
-        "Record tithes, offerings and other giving in LRD or USD",
-        "Post entries to an append-only ledger",
-        "Reverse a posted entry with a reason",
-        "Close the day once offline drafts are reviewed",
-      ]}
-    />
+    <Suspense fallback={<ScreenFallback />}>
+      <GivingScreen />
+    </Suspense>
   );
 }

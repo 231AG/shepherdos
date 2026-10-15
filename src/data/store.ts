@@ -25,6 +25,9 @@ export interface DemoState {
   online: boolean;
   deltas: Deltas;
   guide: Record<string, true>;
+  /** Operator's open read-only support session (church opened under a grant). */
+  supportSession: { grantId: string; churchSlug: string } | null;
+  setSupportSession: (s: { grantId: string; churchSlug: string } | null) => void;
   /** Ids currently animating from pending to synced. Not persisted. */
   syncing: string[];
   setSyncing: (ids: string[]) => void;
@@ -67,6 +70,7 @@ const initial = () => ({
   online: true,
   deltas: {} as Deltas,
   guide: {} as Record<string, true>,
+  supportSession: null as { grantId: string; churchSlug: string } | null,
 });
 
 export const useDemoStore = create<DemoState>()(
@@ -74,6 +78,7 @@ export const useDemoStore = create<DemoState>()(
     (set) => ({
       ...initial(),
       syncing: [],
+      setSupportSession: (supportSession) => set({ supportSession }),
       setSyncing: (ids) => set({ syncing: ids }),
       setRole: (role) => set({ role }),
       setOnline: (online) => set({ online }),
@@ -87,7 +92,7 @@ export const useDemoStore = create<DemoState>()(
       storage: createJSONStorage(() => safeStorage),
       // A newer demo build discards older saved changes instead of guessing.
       migrate: () => initial() as unknown as DemoState,
-      partialize: (s) => ({ epoch: s.epoch, role: s.role, online: s.online, deltas: s.deltas, guide: s.guide }),
+      partialize: (s) => ({ epoch: s.epoch, role: s.role, online: s.online, deltas: s.deltas, guide: s.guide, supportSession: s.supportSession }),
     },
   ),
 );

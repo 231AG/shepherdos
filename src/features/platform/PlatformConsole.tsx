@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import {
   churchMemberCount,
@@ -10,7 +11,9 @@ import {
   listPlatformChurches,
   listSupportGrants,
   provisionChurch,
+  requestSupportAccess,
   smsBalance,
+  startSupportSession,
   useDb,
   type Db,
 } from "@/data/repo";
@@ -251,12 +254,22 @@ function ChurchesTab() {
 }
 
 function SupportAccessCard({ db, now }: { db: Db; now: Date }) {
-  const live = listSupportGrants(db).filter((g) => isGrantLive(g, now));
+  const router = useRouter();
+  const mark = useGuideMark();
+  const grants = listSupportGrants(db);
+  const live = grants.filter((g) => isGrantLive(g, now));
+  const requested = grants.filter((g) => g.status === "requested");
+  const requestable = listPlatformChurches(db).filter(
+    (c) => c.has_content && !live.some((g) => g.church_id === c.id) && !requested.some((g) => g.church_id === c.id),
+  );
+  const [churchId, setChurchId] = useState("");
+  const [reason, setReason] = useState("Import troubleshooting");
+  const target = requestable.find((c) => c.id === churchId) ?? requestable[0];
   return (
     <Card>
       <CardHeader title="Support access" />
       <div className="flex flex-col gap-3 px-5 pb-5 pt-4">
-        {live.length === 0 && (
+        {live.length === 0 && requested.length === 0 && (
           <p className="rounded-xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-muted">No open support grants.</p>
         )}
         {live.map((g) => {
@@ -275,12 +288,11 @@ function SupportAccessCard({ db, now }: { db: Db; now: Date }) {
               <div className="flex shrink-0 gap-2">
                 <Button
                   size="sm"
-                  onClick={() =>
-                    toast("Read-only support view arrives in phase 3", {
-                      tone: "info",
-                      body: "Opening a church under a grant is logged to that church's audit trail.",
-                    })
-                  }
+                  onClick={() => {
+                    startSupportSession(g.id, church);
+                    mark("open_support");
+                    router.push(`/c/${church.slug}/`);
+                  }}
                 >
                   Open church
                 </Button>
@@ -299,8 +311,57 @@ function SupportAccessCard({ db, now }: { db: Db; now: Date }) {
             </div>
           );
         })}
+        {requested.map((g) => {
+          const church = db.churches.find((c) => c.id === g.church_id)!;
+          return (
+            <div key={g.id} className="rounded-xl border border-gold/70 bg-gold-soft p-4">
+              <p className="font-semibold text-navy">{church.name}</p>
+              <p className="mt-0.5 text-xs text-gold-ink">
+                Requested {fmtTime(g.created_at)} · {g.reason} · waiting for the church admin to approve
+              </p>
+            </div>
+          );
+        })}
+        {target && (
+          <form
+            className="flex flex-col gap-2 rounded-xl bg-cloud p-3 sm:flex-row sm:items-end"
+            onSubmit={(e) => {
+              e.preventDefault();
+              requestSupportAccess(target, reason);
+              mark("request_access");
+              toast("Access requested", { body: `${target.short_name}'s pastor will see the request on their dashboard.` });
+            }}
+          >
+            <div className="min-w-0 flex-1">
+              <label htmlFor="grant-church" className="text-xs font-semibold text-navy">
+                Request access to
+              </label>
+              <Select id="grant-church" value={target.id} onChange={(e) => setChurchId(e.target.value)}>
+                {requestable.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="min-w-0 flex-1">
+              <label htmlFor="grant-reason" className="text-xs font-semibold text-navy">
+                Reason
+              </label>
+              <Select id="grant-reason" value={reason} onChange={(e) => setReason(e.target.value)}>
+                {["Import troubleshooting", "Check-in sync problem", "Account setup help", "SMS delivery question"].map((r) => (
+                  <option key={r}>{r}</option>
+                ))}
+              </Select>
+            </div>
+            <Button type="submit" variant="secondary" className="shrink-0">
+              Request
+            </Button>
+          </form>
+        )}
         <p className="text-xs text-muted">
           Grants are requested by the operator, approved by a church admin, time-limited, and every action taken under them is written to the church&apos;s audit log.
+          Giving is never visible to ComNet.
         </p>
       </div>
     </Card>

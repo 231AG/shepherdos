@@ -3,21 +3,14 @@
 import Link from "next/link";
 import { EyeOff } from "lucide-react";
 import { givingSummary, monthRange, useDb } from "@/data/repo";
-import { GIVING_TYPES, type GivingType } from "@/data/types";
+import { GIVING_TYPES } from "@/data/types";
+import { GIVING_TYPE_LABEL } from "@/lib/giving";
 import { canSeeLedger } from "@/lib/access";
 import { formatAmount, formatMoney } from "@/lib/money";
 import { fmtDate } from "@/lib/dates";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { useChurch } from "@/components/shell/ChurchContext";
 import { churchHref } from "@/components/shell/nav";
-
-export const GIVING_TYPE_LABEL: Record<GivingType, string> = {
-  tithe: "Tithes",
-  offering: "Offerings",
-  thanksgiving: "Thanksgiving",
-  building_fund: "Building fund",
-  pledge_payment: "Pledge payments",
-};
 
 /** This month's giving. LRD and USD are shown side by side, never added together. */
 export function GivingCard() {

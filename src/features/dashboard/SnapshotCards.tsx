@@ -25,7 +25,7 @@ import { Chips } from "@/components/ui/Tabs";
 import { ColumnChart } from "@/components/charts/ColumnChart";
 import { useChurch } from "@/components/shell/ChurchContext";
 import { churchHref } from "@/components/shell/nav";
-import { GIVING_TYPE_LABEL } from "./GivingCard";
+import { GIVING_TYPE_LABEL } from "@/lib/giving";
 
 const STATUS_ORDER: MemberStatus[] = ["active", "new", "inactive", "excused"];
 
@@ -50,7 +50,7 @@ function StatusRow({ counts, slug }: { counts: Record<MemberStatus, number>; slu
 /** Secretary: membership at a glance instead of giving. */
 export function MembershipSnapshot() {
   const db = useDb();
-  const { church, scope } = useChurch();
+  const { church, scope, support } = useChurch();
   const counts = statusCounts(db, church.id, scope);
   const recent = [...listMembers(db, church.id, scope)].sort((a, b) => b.joined_on.localeCompare(a.joined_on)).slice(0, 4);
   return (
@@ -67,7 +67,7 @@ export function MembershipSnapshot() {
           </li>
         ))}
       </ul>
-      <div className="mt-auto px-5 pb-5 pt-4">
+      <div className={support ? "hidden" : "mt-auto px-5 pb-5 pt-4"}>
         <ButtonLink href={churchHref(church.slug, "members/import")} variant="secondary" className="w-full" icon={<Upload className="size-4" aria-hidden />}>
           Import notebook spreadsheet
         </ButtonLink>

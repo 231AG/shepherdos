@@ -13,7 +13,6 @@ import {
   type ServiceRow,
 } from "@/data/repo";
 import type { ServiceKind } from "@/data/types";
-import { canAccess } from "@/lib/access";
 import { fmtDate, fmtTime, toISODate } from "@/lib/dates";
 import { plural } from "@/lib/cn";
 import { ROLES } from "@/lib/roles";
@@ -36,12 +35,12 @@ import { KpiCard } from "@/features/dashboard/KpiCard";
 type Tab = "services" | "trends";
 
 export function AttendanceScreen() {
-  const { church, role, scope } = useChurch();
+  const { church, role, scope, can, support } = useChurch();
   const mark = useGuideMark();
   const [tab, setTab] = useState<Tab>("services");
   const [newOpen, setNewOpen] = useState(false);
 
-  if (!canAccess(role, "attendance")) {
+  if (!can("attendance")) {
     return <NoAccess body={`${ROLES[role].label}: ${ROLES[role].limits}`} primary={{ href: churchHref(church.slug, ""), label: "Back to dashboard" }} />;
   }
   const canManage = role === "pastor" || role === "secretary";
@@ -54,9 +53,11 @@ export function AttendanceScreen() {
           <h1 className="mt-1 text-3xl font-extrabold">Attendance</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <ButtonLink href={churchHref(church.slug, "attendance/check-in")} icon={<ScanLine className="size-4" aria-hidden />}>
-            Start check-in
-          </ButtonLink>
+          {!support && (
+            <ButtonLink href={churchHref(church.slug, "attendance/check-in")} icon={<ScanLine className="size-4" aria-hidden />}>
+              Start check-in
+            </ButtonLink>
+          )}
           {canManage && (
             <Button variant="secondary" onClick={() => setNewOpen(true)} icon={<CalendarPlus className="size-4" aria-hidden />}>
               New service

@@ -16,6 +16,7 @@ const step = async (name, fn) => {
     console.log("ok  ", name);
   } catch (e) {
     console.log("FAIL", name, "-", e.message.split("\n")[0]);
+    if (shots) await page.screenshot({ path: `${shots}/FAIL-${name.slice(0, 30).replace(/\W+/g, "_")}_${width}.png` });
     errors.push(name);
   }
 };
@@ -43,6 +44,8 @@ await step("open member profile sheet", async () => {
   await page.waitForTimeout(400);
   if (shots) await page.screenshot({ path: `${shots}/member-sheet_${width}.png` });
   await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+  await page.waitForURL((u) => !u.searchParams.has("id"));
+  await page.locator("dialog[open]").waitFor({ state: "detached" });
 });
 await step("status filter Inactive shows 58", async () => {
   await page.getByLabel(/Search by name or phone/).fill("");

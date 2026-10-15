@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/brand/Logo";
-import { canAccess } from "@/lib/access";
 import { cn } from "@/lib/cn";
 import { fmtDate } from "@/lib/dates";
 import { useChurch } from "./ChurchContext";
@@ -21,10 +20,10 @@ export function isActive(pathname: string, href: string, isRoot: boolean): boole
  * Phones use the bottom navigation instead.
  */
 export function Sidebar() {
-  const { church, role } = useChurch();
+  const { church, can } = useChurch();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
-  const items = NAV.filter((n) => canAccess(role, n.module, church.settings));
+  const items = NAV.filter((n) => can(n.module));
 
   return (
     <>
