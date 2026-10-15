@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/*
+ * ShepherdOS design tokens.
+ * The default Tailwind palette is removed on purpose: components may only use
+ * the colours below, so a stray hex value or `bg-slate-500` cannot slip in.
+ */
+@theme {
+  --color-*: initial;
+
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Primary: Midnight Navy */
+  --color-navy-950: #0d2132;
+  --color-navy-900: #122b3f;
+  --color-navy: #17344c;
+  --color-navy-700: #234863;
+  --color-navy-600: #345b78;
+  --color-navy-200: #c9d5e1;
+  --color-navy-100: #e4ebf2;
+  --color-navy-50: #f0f4f8;
+
+  /* Secondary: Royal Teal. `teal` is for fills, icons and charts only.
+     `teal-ink` passes WCAG AA for text and white-on-teal buttons. */
+  --color-teal: #16877e;
+  --color-teal-ink: #0e6b63;
+  --color-teal-soft: #e3f3f1;
+
+  /* Accent: Champagne Gold. Fills and highlights only, navy text on top. */
+  --color-gold: #d9b56d;
+  --color-gold-soft: #fbf3e2;
+  --color-gold-ink: #6b4e0e;
+
+  /* Surfaces and text */
+  --color-cloud: #f7f9fc;
+  --color-ink: #243447;
+  --color-muted: #64748b;
+  --color-line: #e3e8ef;
+  --color-line-strong: #cbd5e1;
+
+  /* Danger */
+  --color-danger: #c54b50;
+  --color-danger-ink: #a3373c;
+  --color-danger-soft: #fbeaea;
+
+  /* Neutral status (Excused) */
+  --color-slate-soft: #eef2f6;
+  --color-slate-ink: #475569;
+
+  /* Typography (variables are set by next/font in the root layout) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Elevation, tinted to navy rather than pure black */
+  --shadow-card: 0 1px 2px rgb(23 52 76 / 0.04), 0 1px 3px rgb(23 52 76 / 0.06);
+  --shadow-raised: 0 4px 12px rgb(23 52 76 / 0.08), 0 1px 3px rgb(23 52 76 / 0.06);
+  --shadow-overlay: 0 24px 48px rgb(13 33 50 / 0.18), 0 4px 12px rgb(13 33 50 / 0.1);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-slide-in-right: slide-in-right 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-in-up: slide-in-up 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pop-in: pop-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-in-right {
+    from { transform: translateX(24px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slide-in-up {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes pop-in {
+    from { transform: scale(0.97); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-cloud);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    color: var(--color-navy);
+    letter-spacing: -0.01em;
+  }
+  /* Visible focus ring everywhere: gold outline. */
+  :focus-visible {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+  dialog::backdrop {
+    background: rgb(13 33 50 / 0.45);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
