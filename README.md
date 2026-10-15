@@ -4,7 +4,7 @@ A clickable, front-end-only demo of **ShepherdOS**, a multi-church management pl
 
 Everything runs in the browser on fictional, generated data. There is no backend, no real sign-in and no real SMS. It is a static export hosted on Vercel.
 
-> Status: **Phase 2 of 6**. Done: foundation, demo sign-in, role and church switching, church dashboard, platform console overview, members (directory, profile, add/edit, notebook import) and attendance (services, offline Sunday check-in, trends). Modules from later phases show a short "arrives in phase N" screen.
+> Status: **Phase 3 of 6**. Done: foundation, demo sign-in, role and church switching, dashboard, members (directory, profile, add/edit, notebook import), attendance (services, offline Sunday check-in, trends), giving (capture, append-only ledger, reversals, offline drafts, daily close, CSV export) and the platform console with read-only support sessions. Modules from later phases show a short "arrives in phase N" screen.
 
 ## Run it locally
 
@@ -27,7 +27,7 @@ src/data/types.ts    domain types shaped like the spec's data model
 src/data/store.ts    zustand store, persisted to localStorage (versioned)
 src/data/repo.ts     the repository: every read and write goes through here
 src/data/core.ts     seed + delta merge and write helpers (used only by repository modules)
-src/data/members.ts, attendance.ts, importer.ts   repository modules, re-exported by repo.ts
+src/data/members.ts, attendance.ts, importer.ts, giving.ts   repository modules, re-exported by repo.ts
 ```
 
 - **Generated relative to today.** The seed is rebuilt on every page load from the current date, so "last 12 Sundays" are always the most recent 12 Sundays and nothing looks stale.
@@ -44,6 +44,17 @@ src/data/members.ts, attendance.ts, importer.ts   repository modules, re-exporte
 ### Offline check-in (simulated)
 
 The Online/Offline switch in the header simulates the network. Offline check-ins are saved with a `pending` state; going back online (or "Sync now") replays the queue and marks them `synced`. Grace Fellowship's open Sunday service is seeded mid-service: most regulars are in, two check-ins wait on the device and one (Felix Massaquoi) failed, to show Retry. Imported members show as New until their first check-in, so an import never marks people inactive.
+
+### Giving rules (enforced in `src/data/giving.ts`)
+
+- Posted entries are never edited or deleted. A correction is a separate reversal row (`REV-…`) linked to the original, with a required reason; the original stays visible as "Posted · reversed". An entry can be reversed once.
+- Offline captures are drafts (`DR-…`). They never count in posted totals and wait for treasurer review (post or discard). A draft that matches a posted entry (same member, amount and currency within 10 minutes) is flagged as a possible duplicate, never merged automatically.
+- A day can't be closed while drafts for it are pending; once closed, nothing more can be posted or reversed for it.
+- LRD and USD are totalled separately everywhere. Pastors see totals only, the full ledger, or nothing, per the church setting.
+
+### Support sessions (simulated)
+
+A platform operator can only open a church's records under an approved, time-limited grant. In the Platform console, "Open church" starts a read-only session (dashboard, members without phone numbers, attendance; never giving) with a countdown bar. When the grant expires the session ends by itself. Requests for access appear on the church pastor's dashboard to approve or deny. Every step writes an audit event.
 
 ### What the full version replaces
 
@@ -74,6 +85,7 @@ npm run build && npm run serve   # in one terminal
 node scripts/screenshot.mjs http://localhost:4173 ./shots pastor /c/grace-fellowship/   # 390, 768, 1440 px
 node scripts/smoke.mjs           # clicks through the main demo flows
 node scripts/smoke-phase2.mjs    # members, import and check-in flows
+node scripts/smoke-phase3.mjs    # giving ledger rules and support sessions
 node scripts/find-overflow.mjs http://localhost:4173/platform/ 390 operator
 ```
 

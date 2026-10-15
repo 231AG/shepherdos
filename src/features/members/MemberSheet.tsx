@@ -23,7 +23,7 @@ import { Sheet } from "@/components/ui/Dialog";
 import { Avatar } from "@/components/ui/misc";
 import { useChurch } from "@/components/shell/ChurchContext";
 import { useGuideMark } from "@/components/shell/hooks";
-import { GIVING_TYPE_LABEL } from "@/features/dashboard/GivingCard";
+import { GIVING_TYPE_LABEL } from "@/lib/giving";
 import { PhoneText, StatusCell } from "./shared";
 
 const EXCEPTION_LABEL = { homebound: "Homebound", leave: "Approved leave", pastoral: "Pastoral exception" } as const;

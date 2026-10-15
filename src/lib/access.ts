@@ -33,6 +33,9 @@ const MATRIX: Record<ModuleId, RoleId[]> = {
   platform: ["operator"],
 };
 
+/** What a platform operator can open inside a church under a support grant: read-only, no money. */
+export const SUPPORT_MODULES: ModuleId[] = ["dashboard", "members", "attendance"];
+
 export function canAccess(role: RoleId | null, module: ModuleId, settings?: ChurchSettings): boolean {
   if (!role) return false;
   if (!MATRIX[module].includes(role)) return false;
@@ -58,4 +61,10 @@ export function canSeeContacts(role: RoleId | null): boolean {
 
 export function canSeeFinancialReports(role: RoleId | null): boolean {
   return role === "pastor" || role === "treasurer";
+}
+
+/** Access inside a church, taking an operator's support session into account. */
+export function canAccessInChurch(role: RoleId, module: ModuleId, settings: ChurchSettings, support: boolean): boolean {
+  if (support) return role === "operator" && SUPPORT_MODULES.includes(module);
+  return canAccess(role, module, settings);
 }

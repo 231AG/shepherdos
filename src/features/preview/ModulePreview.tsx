@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, Hammer } from "lucide-react";
-import { canAccess, type ModuleId } from "@/lib/access";
+import type { ModuleId } from "@/lib/access";
 import { useChurch } from "@/components/shell/ChurchContext";
 import { NoAccess } from "@/components/shell/NoAccess";
 import { churchHref } from "@/components/shell/nav";
@@ -24,8 +24,8 @@ export function ModulePreview({
   phase: number;
   points: string[];
 }) {
-  const { church, role } = useChurch();
-  if (!canAccess(role, module, church.settings)) {
+  const { church, role, can } = useChurch();
+  if (!can(module)) {
     return (
       <NoAccess
         body={<>{ROLES[role].label}: {ROLES[role].limits}</>}

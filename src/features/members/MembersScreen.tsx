@@ -7,7 +7,7 @@ import { EyeOff, Search, Upload, UserPlus, Users } from "lucide-react";
 import { listDepartments, listMemberRows, memberById, statusCounts, useDb, type MemberRow } from "@/data/repo";
 import type { MemberStatus } from "@/lib/status";
 import { STATUS_LABEL } from "@/lib/status";
-import { canAccess, canSeeContacts } from "@/lib/access";
+import { canSeeContacts } from "@/lib/access";
 import { initials, plural } from "@/lib/cn";
 import { fmtDate } from "@/lib/dates";
 import { ROLES } from "@/lib/roles";
@@ -30,7 +30,7 @@ const PAGE = 30;
 
 export function MembersScreen() {
   const db = useDb();
-  const { church, role, scope } = useChurch();
+  const { church, role, scope, can } = useChurch();
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -79,7 +79,7 @@ export function MembersScreen() {
   };
   const openMember = (id: string) => setParam("id", id);
 
-  if (!canAccess(role, "members")) {
+  if (!can("members")) {
     return <NoAccess body={`${ROLES[role].label}: ${ROLES[role].limits}`} primary={{ href: churchHref(church.slug, ""), label: "Back to dashboard" }} />;
   }
 

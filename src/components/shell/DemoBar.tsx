@@ -34,8 +34,10 @@ export function DemoBar({ churchSlug }: { churchSlug: string | null }) {
 
   const switchTo = (next: RoleId) => {
     if (role && next !== role) mark("switch_role", role);
+    if (next !== role) useDemoStore.getState().setSupportSession(null);
     setRole(next);
     if (next === "operator") router.push("/platform/");
+    else if (role === "operator" && churchSlug) router.push(`/c/${churchSlug}/`);
     else if (!churchSlug) router.push(`/c/${DEFAULT_CHURCH_SLUG}/`);
     toast(`Now viewing as ${ROLES[next].label}`, { tone: "info", body: ROLES[next].limits });
   };

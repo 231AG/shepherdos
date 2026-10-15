@@ -19,7 +19,6 @@ import {
 } from "@/data/repo";
 import type { AttendanceRecord, Member } from "@/data/types";
 import { useDemoStore } from "@/data/store";
-import { canAccess } from "@/lib/access";
 import { cn, initials, plural } from "@/lib/cn";
 import { fmtDate, fmtTime } from "@/lib/dates";
 import { formatPhoneShort, phoneMatches } from "@/lib/phone";
@@ -48,7 +47,7 @@ function rowState(rec: AttendanceRecord | undefined, syncing: Set<string>): RowS
 
 export function CheckInScreen() {
   const db = useDb();
-  const { church, role, scope } = useChurch();
+  const { church, role, scope, can, support } = useChurch();
   const params = useSearchParams();
   const router = useRouter();
   const online = useDemoStore((s) => s.online);
@@ -70,8 +69,8 @@ export function CheckInScreen() {
   const records = service ? serviceAttendance(db, service.id) : new Map<string, AttendanceRecord>();
   const depts = memberDepartmentsIndex(db, church.id);
 
-  if (!canAccess(role, "attendance")) {
-    return <NoAccess body={`${ROLES[role].label}: ${ROLES[role].limits}`} primary={{ href: churchHref(church.slug, ""), label: "Back to dashboard" }} />;
+  if (!can("attendance") || support) {
+    return <NoAccess body={support ? "Support sessions are read-only. Check-in is for church staff." : `${ROLES[role].label}: ${ROLES[role].limits}`} primary={{ href: churchHref(church.slug, ""), label: "Back to dashboard" }} />;
   }
   if (!service) {
     return (
