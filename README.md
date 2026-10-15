@@ -4,7 +4,7 @@ A clickable, front-end-only demo of **Church Connect**, a multi-church managemen
 
 Everything runs in the browser on fictional, generated data. There is no backend, no real sign-in and no real SMS. It is a static export hosted on Vercel.
 
-> Status: **Phase 3 of 6**. Done: foundation, demo sign-in, role and church switching, dashboard, members (directory, profile, add/edit, notebook import), attendance (services, offline Sunday check-in, trends), giving (capture, append-only ledger, reversals, offline drafts, daily close, CSV export) and the platform console with read-only support sessions. Modules from later phases show a short "arrives in phase N" screen.
+> Status: **Phase 4 of 6**. Done: foundation, demo sign-in, role and church switching, dashboard, members (directory, profile, add/edit, notebook import), attendance (services, offline Sunday check-in, trends), giving (ledger, reversals, drafts, daily close, CSV export), platform console with support sessions, departments, soul-winning pipeline and SMS messaging (simulated). Reports, Events, Bible and Settings follow in Phase 5.
 
 ## Run it locally
 
@@ -27,7 +27,8 @@ src/data/types.ts    domain types shaped like the spec's data model
 src/data/store.ts    zustand store, persisted to localStorage (versioned)
 src/data/repo.ts     the repository: every read and write goes through here
 src/data/core.ts     seed + delta merge and write helpers (used only by repository modules)
-src/data/members.ts, attendance.ts, importer.ts, giving.ts   repository modules, re-exported by repo.ts
+src/data/members.ts, attendance.ts, importer.ts, giving.ts,
+  departments.ts, soulwinning.ts, messaging.ts           repository modules, re-exported by repo.ts
 ```
 
 - **Generated relative to today.** The seed is rebuilt on every page load from the current date, so "last 12 Sundays" are always the most recent 12 Sundays and nothing looks stale.
@@ -55,6 +56,10 @@ The Online/Offline switch in the header simulates the network. Offline check-ins
 ### Support sessions (simulated)
 
 A platform operator can only open a church's records under an approved, time-limited grant. In the Platform console, "Open church" starts a read-only session (dashboard, members without phone numbers, attendance; never giving) with a countdown bar. When the grant expires the session ends by itself. Requests for access appear on the church pastor's dashboard to approve or deny. Every step writes an audit event.
+
+### Messaging (simulated)
+
+No SMS is ever sent. The composer counts characters and SMS segments (160 GSM-7 characters, or 70 when the text needs Unicode; split messages use 153 / 67), excludes opted-out members and members without a phone, and prices the send in credits. Sending captures credits from the church wallet, steps through queued, sending, sent and delivered, and returns credits for the few deliveries that fail. Sending is blocked when the wallet is short or the device is offline.
 
 ### What the full version replaces
 
@@ -86,6 +91,7 @@ node scripts/screenshot.mjs http://localhost:4173 ./shots pastor /c/grace-fellow
 node scripts/smoke.mjs           # clicks through the main demo flows
 node scripts/smoke-phase2.mjs    # members, import and check-in flows
 node scripts/smoke-phase3.mjs    # giving ledger rules and support sessions
+node scripts/smoke-phase4.mjs    # departments, soul-winning and messaging
 node scripts/find-overflow.mjs http://localhost:4173/platform/ 390 operator
 ```
 

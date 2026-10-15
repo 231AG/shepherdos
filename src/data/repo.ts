@@ -451,3 +451,6 @@ export * from "./members";
 export * from "./attendance";
 export * from "./importer";
 export * from "./giving";
+export * from "./departments";
+export * from "./soulwinning";
+export * from "./messaging";
