@@ -120,7 +120,9 @@ interface ChurchConfig {
   smsCredits: number;
   service: { name: string; location: string; hour: number };
   midweek: { name: string; location: string; hour: number };
-  staff: { name: string; display: string; role: StaffUser["role"]; dept?: DeptKey; mfa: boolean }[];
+  address: string;
+  phone: string;
+  staff: { name: string; display: string; role: StaffUser["role"]; dept?: DeptKey; mfa: boolean; phone?: string }[];
   featured: Featured[];
 }
 
@@ -132,6 +134,8 @@ const GRACE: ChurchConfig = {
   initials: "GF",
   city: "Paynesville",
   county: "Montserrado",
+  address: "Red Light, Duport Road",
+  phone: "+231770200450",
   memberCount: 486,
   excused: 6,
   newMembers: 14,
@@ -148,8 +152,8 @@ const GRACE: ChurchConfig = {
     { name: "Patience Toe", display: "Patience Toe", role: "secretary", mfa: false },
     { name: "Martha Doe", display: "Martha Doe", role: "treasurer", mfa: true },
     { name: "Emmanuel Flomo", display: "Bro. Emmanuel Flomo", role: "dept_head", dept: "youth", mfa: false },
-    { name: "Peter Flomo", display: "Deacon Peter Flomo", role: "secretary", mfa: false },
-    { name: "Mary Doe", display: "Sis. Mary Doe", role: "dept_head", dept: "womens", mfa: false },
+    { name: "Peter Flomo", display: "Deacon Peter Flomo", role: "secretary", mfa: false, phone: "+231778420163" },
+    { name: "Mary Doe", display: "Sis. Mary Doe", role: "dept_head", dept: "womens", mfa: false, phone: "+231886305527" },
   ],
   featured: [
     { first: "James", last: "Kollie", gender: "male", phone: "+231770112233", depts: ["deacons", "mens"], profile: "regular", joinedDaysAgo: 5800 },
@@ -185,6 +189,8 @@ const LIVING: ChurchConfig = {
   initials: "LW",
   city: "Gbarnga",
   county: "Bong",
+  address: "Kakata Highway, opposite Gbarnga City Hall",
+  phone: "+231886510322",
   memberCount: 212,
   excused: 3,
   newMembers: 6,
@@ -285,6 +291,8 @@ function generateChurch(cfg: ChurchConfig, now: Date, epoch: Date, t: Tables) {
     initials: cfg.initials,
     city: cfg.city,
     county: cfg.county,
+    address: cfg.address,
+    phone: cfg.phone,
     plan: "Pilot · annual",
     renewal_on: toISODate(addDays(now, cfg.renewalInDays)),
     subscription_status: "active",
@@ -320,6 +328,8 @@ function generateChurch(cfg: ChurchConfig, now: Date, epoch: Date, t: Tables) {
       role: s.role,
       department_id: s.dept ? deptId(s.dept) : null,
       mfa: s.mfa,
+      phone: s.phone ?? cfg.featured.find((f) => `${f.first} ${f.last}` === s.name)?.phone ?? null,
+      status: "active",
       created_at: createdAt,
     });
   });
@@ -1107,6 +1117,8 @@ function generatePlatformOnly(now: Date, t: Tables) {
       ...rest,
       id: uuidFrom(`church:${m.slug}`),
       renewal_on: renewalDays === null ? null : toISODate(addDays(now, renewalDays)),
+      address: null,
+      phone: null,
       hosting_fee_minor: 85_000,
       has_content: false,
       settings: { ...DEFAULT_SETTINGS },

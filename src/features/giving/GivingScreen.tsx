@@ -64,10 +64,14 @@ export function GivingScreen() {
       <NoAccess
         body={
           role === "pastor"
-            ? "This church has set pastor access to giving to none. A pastor can change it in Settings."
+            ? "This church has turned off giving for pastors. Change it in Settings, under Giving visibility."
             : `${ROLES[role].label}: ${ROLES[role].limits}`
         }
-        primary={{ href: churchHref(church.slug, ""), label: "Back to dashboard" }}
+        primary={
+          role === "pastor"
+            ? { href: `${churchHref(church.slug, "settings")}?tab=giving`, label: "Open Settings" }
+            : { href: churchHref(church.slug, ""), label: "Back to dashboard" }
+        }
       />
     );
   }

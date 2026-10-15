@@ -15,6 +15,7 @@ import { addRow, memo, patchRow, type Db } from "./core";
 import type {
   ChurchEvent,
   Church,
+  ChurchSettings,
   Department,
   FollowUpTask,
   GivingType,
@@ -134,20 +135,32 @@ export function lastAttendedIndex(db: Db, churchId: string): Map<string, string>
 }
 
 export function memberStatuses(db: Db, churchId: string): Map<string, StatusResult> {
-  return memo(db, `status:${churchId}`, () => {
-    const church = db.churches.find((c) => c.id === churchId)!;
+  const church = db.churches.find((c) => c.id === churchId)!;
+  return statusesWith(db, churchId, church.settings);
+}
+
+/** Statuses under the given thresholds. Settings previews use this before saving. */
+function statusesWith(db: Db, churchId: string, settings: ChurchSettings): Map<string, StatusResult> {
+  return memo(db, `status:${churchId}:${settings.new_days}:${settings.inactive_weeks}`, () => {
     const last = lastAttendedIndex(db, churchId);
-    const windowStart = subDays(db.now, church.settings.inactive_weeks * 7);
+    const windowStart = subDays(db.now, settings.inactive_weeks * 7);
     const hadServices = db.services.some(
       (s) => s.church_id === churchId && s.closed && parseISO(s.starts_at) >= windowStart,
     );
     const out = new Map<string, StatusResult>();
     for (const m of db.members) {
       if (m.church_id !== churchId) continue;
-      out.set(m.id, deriveStatus(m, last.get(m.id) ?? null, church.settings, db.now, hadServices));
+      out.set(m.id, deriveStatus(m, last.get(m.id) ?? null, settings, db.now, hadServices));
     }
     return out;
   });
+}
+
+/** Whole-church status counts if the thresholds were changed to `settings`. */
+export function previewStatusCounts(db: Db, churchId: string, settings: ChurchSettings): Record<MemberStatus, number> {
+  const counts: Record<MemberStatus, number> = { new: 0, active: 0, inactive: 0, excused: 0 };
+  for (const r of statusesWith(db, churchId, settings).values()) counts[r.status]++;
+  return counts;
 }
 
 export function statusCounts(db: Db, churchId: string, scope: Scope): Record<MemberStatus, number> {
@@ -400,11 +413,11 @@ export function requestSupportAccess(church: Church, reason: string) {
   audit(church.id, OPERATOR_NAME, `A. Sumo requested support access to ${church.short_name}: ${reason.toLowerCase()}.`);
 }
 
-/** Church admin's answer to a support request. Approved grants last 2 hours, read-only. */
-export function decideSupportRequest(grantId: string, church: Church, approve: boolean, approver: string) {
+/** Church admin's answer to a support request. Approved grants are read-only and expire (2 hours by default). */
+export function decideSupportRequest(grantId: string, church: Church, approve: boolean, approver: string, hours = 2) {
   if (approve) {
-    patchRow("support_grants", grantId, { status: "approved", approved_by: approver, expires_at: new Date(Date.now() + 2 * 3600_000).toISOString() });
-    audit(church.id, approver, `Support grant approved for A. Sumo at ${church.short_name} (2 hours, read-only).`);
+    patchRow("support_grants", grantId, { status: "approved", approved_by: approver, expires_at: new Date(Date.now() + hours * 3600_000).toISOString() });
+    audit(church.id, approver, `Support grant approved for A. Sumo at ${church.short_name} (${hours === 1 ? "1 hour" : `${hours} hours`}, read-only).`);
   } else {
     patchRow("support_grants", grantId, { status: "denied", approved_by: approver });
     audit(church.id, approver, `Support request from A. Sumo denied at ${church.short_name}.`);
@@ -432,6 +445,8 @@ export function provisionChurch(input: { name: string; city: string; county: str
     initials: `${words[0]?.[0] ?? "C"}${words[1]?.[0] ?? ""}`.toUpperCase(),
     city: input.city,
     county: input.county,
+    address: null,
+    phone: null,
     plan: "Annual",
     renewal_on: null,
     subscription_status: "onboarding",
@@ -454,3 +469,6 @@ export * from "./giving";
 export * from "./departments";
 export * from "./soulwinning";
 export * from "./messaging";
+export * from "./settings";
+export * from "./events";
+export * from "./reports";

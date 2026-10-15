@@ -73,7 +73,12 @@ export function MessagingScreen() {
         ]}
         className="self-start"
       />
-      {tab === "compose" && <Composer initialBody={params.get("body") ?? ""} initialDept={params.get("dept")} onSent={() => setTab("history")} />}
+      {tab === "compose" && <Composer
+          initialBody={params.get("body") ?? ""}
+          initialDept={params.get("dept")}
+          fromEvent={db.events.find((e) => e.id === params.get("event") && e.church_id === church.id)?.title ?? null}
+          onSent={() => setTab("history")}
+        />}
       {tab === "history" && <History />}
       {tab === "credits" && <Credits />}
     </div>
@@ -86,7 +91,17 @@ const TEMPLATES: { label: string; text: (church: string) => string }[] = [
   { label: "Prayer meeting", text: (c) => `${c}: Wednesday prayer meeting at 6PM in the fellowship hall. All are welcome.` },
 ];
 
-function Composer({ initialBody, initialDept, onSent }: { initialBody: string; initialDept: string | null; onSent: () => void }) {
+function Composer({
+  initialBody,
+  initialDept,
+  fromEvent,
+  onSent,
+}: {
+  initialBody: string;
+  initialDept: string | null;
+  fromEvent: string | null;
+  onSent: () => void;
+}) {
   const db = useDb();
   const { church, persona } = useChurch();
   const online = useDemoStore((s) => s.online);
@@ -125,14 +140,19 @@ function Composer({ initialBody, initialDept, onSent }: { initialBody: string; i
     setConfirming(false);
     if (!r.ok) return toast("Not sent", { tone: "warning", body: r.error });
     mark("send_sms");
-    toast("Message queued", { body: `Sending to ${plural(resolved.recipients.length, "member")}. ${plural(credits, "credit")} used. No real SMS is sent in the demo.` });
+    toast("Message queued", { body: `Sending to ${plural(resolved.recipients.length, "member")}. ${plural(credits, "credit")} used.` });
     setBody("");
     onSent();
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6">
       <Card className="flex flex-col gap-5 p-5">
+        {fromEvent && body === initialBody && (
+          <p className="-mb-1 rounded-xl bg-teal-soft px-3 py-2.5 text-sm text-teal-ink">
+            Reminder for <span className="font-semibold">{fromEvent}</span>. Review the text and audience, then send.
+          </p>
+        )}
         <div>
           <p className="mb-2 text-sm font-semibold text-navy" id="aud-label">
             Send to
@@ -411,7 +431,7 @@ function Credits() {
   const balance = walletBalance(db, church.id);
   const history = walletHistory(db, church.id);
   return (
-    <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-6">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-6">
       <Card className="p-5">
         <p className="text-sm text-muted">Wallet balance</p>
         <p className="tabular mt-1 font-heading text-4xl font-extrabold text-navy">{balance.toLocaleString("en-US")}</p>

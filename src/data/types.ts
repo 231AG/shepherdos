@@ -35,6 +35,10 @@ export interface Church {
   initials: string;
   city: string;
   county: string;
+  /** Street address shown on reports and printouts. */
+  address: string | null;
+  /** Church office phone, E.164. */
+  phone: string | null;
   plan: "Pilot · annual" | "Annual";
   renewal_on: ISODate | null;
   subscription_status: SubscriptionStatus;
@@ -57,6 +61,9 @@ export interface StaffUser {
   /** Department heads are scoped to one department. */
   department_id: UUID | null;
   mfa: boolean;
+  phone: string | null;
+  /** Invited staff have not accepted their invitation yet. */
+  status: "active" | "invited";
   created_at: ISODateTime;
 }
 

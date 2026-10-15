@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * ShepherdOS design tokens.
+ * Church Connect design tokens.
  * The default Tailwind palette is removed on purpose: components may only use
  * the colours below, so a stray hex value or `bg-slate-500` cannot slip in.
  */
@@ -115,5 +115,24 @@
   *, *::before, *::after {
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
+  }
+}
+
+/* Printouts (Reports → Print or save as PDF). App chrome is hidden with print:hidden. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+  body {
+    background: var(--color-white);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  section, figure, table, tr {
+    break-inside: avoid;
+  }
+  * {
+    box-shadow: none !important;
   }
 }

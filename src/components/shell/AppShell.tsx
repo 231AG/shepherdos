@@ -132,21 +132,32 @@ function HydratedShell({ slug, children }: { slug: string; children: ReactNode }
         Skip to content
       </a>
       <div className="flex min-h-dvh flex-col">
-        <DemoBar churchSlug={slug} />
+        {/* App chrome is left out of printouts (reports print to PDF). */}
+        <div className="contents print:hidden">
+          <DemoBar churchSlug={slug} />
+        </div>
         <div className="flex flex-1">
-          <Sidebar />
+          <div className="contents print:hidden">
+            <Sidebar />
+          </div>
           <div className="flex min-w-0 flex-1 flex-col">
-            <Header />
-            {support && <SupportBar church={church} expiresAt={support.expiresAt} approvedBy={support.approvedBy} />}
-            <OfflineBanner />
-            <main id="main" className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-28 pt-6 sm:px-6 md:pb-12 lg:px-8">
+            <div className="contents print:hidden">
+              <Header />
+              {support && <SupportBar church={church} expiresAt={support.expiresAt} approvedBy={support.approvedBy} />}
+              <OfflineBanner />
+            </div>
+            <main id="main" className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-28 pt-6 sm:px-6 md:pb-12 lg:px-8 print:max-w-none print:p-0">
               {children}
             </main>
           </div>
         </div>
-        <BottomNav />
+        <div className="contents print:hidden">
+          <BottomNav />
+        </div>
       </div>
-      <Toaster />
+      <div className="contents print:hidden">
+        <Toaster />
+      </div>
     </ChurchContext.Provider>
   );
 }
